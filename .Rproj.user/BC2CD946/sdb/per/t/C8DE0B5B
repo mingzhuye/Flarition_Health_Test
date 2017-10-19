@@ -1,0 +1,28 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1481666960797.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "C8DE0B5B",
+    "lastKnownWriteTime" : 3458764518115507968,
+    "last_content_update" : 1481666960797,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "y9ntaefjte",
+        "caption" : "drug",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=drug&cache_key=y9ntaefjte",
+        "displayedObservations" : 52,
+        "environment" : "",
+        "object" : "drug",
+        "totalObservations" : 52,
+        "variables" : 3
+    },
+    "relative_order" : 8,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}

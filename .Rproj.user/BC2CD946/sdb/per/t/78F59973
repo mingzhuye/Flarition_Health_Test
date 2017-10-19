@@ -1,0 +1,28 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1481653436055.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "78F59973",
+    "lastKnownWriteTime" : 4294967302,
+    "last_content_update" : 1481653436055,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "xh91pjn3v5",
+        "caption" : "practices",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=practices&cache_key=xh91pjn3v5",
+        "displayedObservations" : 10,
+        "environment" : "",
+        "object" : "practices",
+        "totalObservations" : 10,
+        "variables" : 5
+    },
+    "relative_order" : 8,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}

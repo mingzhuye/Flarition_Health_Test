@@ -1,0 +1,28 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1481655196207.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "81140A7A",
+    "lastKnownWriteTime" : 2317437768192581376,
+    "last_content_update" : 1481655196207,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "44x43203rn",
+        "caption" : "administration2",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=administration2&cache_key=44x43203rn",
+        "displayedObservations" : "304",
+        "environment" : "",
+        "object" : "administration2",
+        "totalObservations" : "304",
+        "variables" : "6"
+    },
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}

@@ -1,0 +1,28 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1481655692445.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "A9D902E3",
+    "lastKnownWriteTime" : 4294967302,
+    "last_content_update" : 1481655692445,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "7dn9nta9c9",
+        "caption" : "demographics2",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=demographics2&cache_key=7dn9nta9c9",
+        "displayedObservations" : "99",
+        "environment" : "",
+        "object" : "demographics2",
+        "totalObservations" : "99",
+        "variables" : "5"
+    },
+    "relative_order" : 9,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}

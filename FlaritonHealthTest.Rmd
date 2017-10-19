@@ -1,0 +1,202 @@
+---
+title: "Technical Test Quantitative Sciences"
+author: "Mingzhu Ye"
+email: mzye.io@gmail.com
+output: pdf_document
+---
+
+##Part I Questions  
+
+###1.When presented with a new dataset or database, what steps do you generally take to evaluate it prior to working with it?  
+
+1. Examine dataset's structure.
+2. Estimate the dataset's scale.
+3. Clearify relationsips of all the datasets.
+4. Check tidiness of all datasets.
+5. Summarize the datasets' semantics. 
+
+###2.Based on the information provided above and the attached dataset, what 3 questions would you like to understand prior to conducting any analysis of the data?
+1. What are the datasets about? By checking the dataset's info, we can know the datasets are about patient's information, orders and administration. 
+2. What columns are included in each dataset, and what are their meanings? 
+3. How are the datasets related? By checking the identifier, we can know that orders is related to administrations and patients. patients is related to demographics.  
+
+###3.How would you prep the dataset provided for analysis? Please list steps taken and provide code used to prep the tables for analysis.    
+1. Read in the datasets.
+2. Get a quick view of the datasets.
+3. Examine the structures and dimensions of the datasets.
+4. Check whether there are duplicated observations in each dataset.
+5. Unify time formats in the datasets "orders"", "administrations" and "patients".  
+Note: Data processing code included in "code_for_partII.R" 
+
+\pagebreak 
+
+```{r, message=FALSE, warning=FALSE, echo=FALSE}
+library(xlsx)
+##Initialize all 5 datasets, orders, administration, demographics, patients and practices. 
+orders = read.xlsx("flatiron_qs_orders_admins_july_16.xlsx", 1) 
+administration = read.xlsx("flatiron_qs_orders_admins_july_16.xlsx", 2)
+demographics = read.xlsx("flatiron_qs_orders_admins_july_16.xlsx", 3)
+patients = read.xlsx("flatiron_qs_orders_admins_july_16.xlsx", 4)
+practices = read.xlsx("flatiron_qs_orders_admins_july_16.xlsx", 5)
+## check whether there are duplicated observations in each dataset
+patients2 = patients[!duplicated(patients$patient_id), ]
+demographics2 = demographics[!duplicated(demographics$patient_id), ]
+## demographics2 has consistent format and is tidy, except that there are four patients without gender information.
+
+##Unify time formats in dataset order, administration and patients
+fmts <- c("%d-%b-%Y", "%Y-%m-%d") ## observed from the datasets' structure, there are two time formats mixed in one column. 
+
+orders2 = orders[, -5]
+orders2$order_date = as.Date(as.numeric(apply(outer(orders2$order_date, fmts, as.Date), 1, na.omit)), "1970-01-01")
+
+administration2 = administration
+administration2$administered_date = as.Date(as.numeric(apply(outer(administration2$administered_date, fmts, as.Date), 1, na.omit)), "1970-01-01")
+
+patients2$diagnosis_date = as.Date(as.numeric(apply(outer(patients2$diagnosis_date, fmts, as.Date), 1, na.omit)), "1970-01-01")
+patients2$advanced_diagnosis_date = as.Date(as.numeric(apply(outer(patients2$advanced_diagnosis_date, fmts, as.Date), 1, na.omit)), "1970-01-01")
+
+```
+
+\newpage 
+
+## Part II Questions
+###1. Average time elapsed between initial diagnosis and first treatment
+
+**Assumption:** 
+We assumed earliest administered_date as the patient's first treatment date. Observed from the merged table df2 (joined table administrations, patients and demographics), there're a few cases where the first administered_date is before the initial diagnosis_date. Under such cases, I will use the earlist administered_date, which must be after initial diagnosis_date, for a patient to generate a new column named 'date_diff'. The column 'date_diff' is days interval from initial diagnosis_date to earliest administered_date.
+
+```{r, message=FALSE, warning=FALSE, echo=FALSE}
+df1 = merge(patients2[, c(1,5,6)], administration2[,c(1,4)], by.x ="patient_id", by.y="patient_id", all.x=T)
+#df2 = merge(df1, demographics2, by.x="patient_id", by.y = "patient_id")
+df2 = df1[with(df1, order(df1[,1], df1[, 4])), ] 
+df2[, 5] = df2[,4] - df2[, 2]
+colnames(df2)[5] = "date_diff" ## observed from the merged table df2, there do exist cases where the first administered_date is before the initial diagnose date. Under such case, I will use the earlist administered_date after initial diagnose date for a patient.  
+df2= df2[!is.na(df2$diagnosis_date), ] ## remove the NAs contained in diagnosis_date column.
+subdf2 = data.frame(matrix(nrow=length(unique(df2$patient_id)), ncol=2))#initialize an empty data frame
+subdf2[, 1] = unique(df2$patient_id)
+for (i in 1:nrow(subdf2)){
+  subdf2[i, 2] = sort(subset(df2, df2$patient_id==subdf2[i,1] & df2$date_diff>=0)$date_diff)[1] # to apply the smallest positive different days for each patient. 
+}
+subdf2 = merge(subdf2, demographics2[,1:2], by.x="X1", by.y="patient_id")
+colnames(subdf2) = c("patient_id", "date_diff", "gender")
+#mean(subdf2$date_diff)#14025.56
+#mean(subset(subdf2, gender=="male")$date_diff)#12693.5
+#mean(subset(subdf2, gender=="female")$date_diff)#15114.65
+```
+
+**This is the quick view of merged results: **
+
+| patient_id | date_diff | gender  |
+|------------|-----------|---------|
+| 5402v      | 17011     | male    |
+| a3169y     | 27786     | male    |
+| a6230g     | 18385     | female  |
+| a6991u     | 11894     | unknown |
+| a7481m     | 26457     | female  |
+
+###Conclusion:   
+The averaged time between a patient's initial diagnosis date and first treatment date is approximately 14025.56 days. The average time differs dramatically by gender, separately 12693.5 days in male and 15114.65 days in female. 
+
+###2. Patients on drug nivolumab from 2012-2016
+```{r, message=FALSE, warning=FALSE, echo=FALSE}
+administration2[,6] = format(administration2[, 4], "%Y")
+colnames(administration2)[6] = 'year'
+nivo = subset(administration2, year %in% c(2012, 2013, 2014, 2015) & drug_name == "nivolumab")
+```
+
+**This is the quick view of manipulated drug 'nivolumab' information: **
+
+| patient_id | external_patient_id | order_id      | administered_date | drug_name | year |
+|------------|---------------------|---------------|-------------------|-----------|------|
+| h9993d     | 70                  | r90118525421e | 2015-08-07        | nivolumab | 2015 |
+| h9993d     | 70                  | o81913333209g | 2014-01-08        | nivolumab | 2014 |
+| w9986a     | 46                  | l36534942738h | 2014-12-15        | nivolumab | 2014 |
+| s9417f     | 29                  | s10845324909e | 2014-02-20        | nivolumab | 2014 |
+| s9417f     | 29                  | h7336725593a  | 2015-04-09        | nivolumab | 2015 |
+
+###Conclusion:    
+There were totally 62 unique patients on drug "nivolumab" during year 2012-2016. While, some patients made multiple orders for the drug "nivolumab". So there were totally 100 unique orders for drug "nivolumab" during year 2012-2016. 
+\pagebreak
+
+\newpage
+###3. Add new stratification to dataset demographics
+
+**Assumption:**
+Since there are 4 patients without gender information, they couldn't be added risk levels using original stratification rules. New classification was inspired from the origial ones, with 'High_to_Medium_Risk','Medium_to_Low_Risk ' being added. In stratification 'High_to_Medium_Risk', 'High' refers to the unknown gender is female, 'Medium' refers to the unknown gender is male. In stratification 'Medium_to_Low_Risk', 'Medium' refers to the unknown gender is female, 'Low' refers to the unknown gender is male. 
+
+```{r, message=FALSE, warning=FALSE, echo=FALSE}
+for(i in 1:nrow(demographics2)){
+  if((demographics2[i, 2]=="female"&demographics2[i, 4]=="NON_WHITE")|(demographics2[i, 2]=="male"&demographics2[i, 4]=="NON_WHITE" & demographics2[i, 3]>=70)|(demographics2[i, 2]=="unknown"&demographics2[i, 4]=="NON_WHITE" & demographics2[i, 3]>=70)){
+    demographics2[i, 5] = "High_Risk"
+  }
+  else if((demographics2[i, 2]=="female"&demographics2[i, 4]=="WHITE" & demographics2[i, 3]>=75)|(demographics2[i, 2]=="male"&demographics2[i, 4]=="NON_WHITE" & demographics2[i, 3]<70)){
+    demographics2[i, 5] = "Medium_Risk"
+  }
+  else if((demographics2[i, 2]=="female"&demographics2[i, 4]=="WHITE" & demographics2[i, 3]<75)|(demographics2[i, 2]=="male"&demographics2[i, 4]=="WHITE")|(demographics2[i, 2]=="unknown"&demographics2[i, 4]=="WHITE" & demographics2[i, 3]<75) ){
+    demographics2[i, 5] = "Low_Risk"
+  }
+  else if((demographics2[i, 2]=="unknown"&demographics2[i, 4]=="WHITE" & demographics2[i, 3]>=75)){
+    demographics2[i, 5] = "Medium_to_Low_Risk"
+  }
+  else if((demographics2[i, 2]=="unknown"&demographics2[i, 4]=="NON_WHITE" & demographics2[i, 3]<70)){
+    demographics2[i, 5] = "High_to_Medium_Risk"
+  }
+}
+##Since there are 4 patients without gender information, they couldn't be added risk levels using original stratification rules. New classification was inspired from the origial ones, with 'High_to_Medium_Risk','Medium_to_Low_Risk ' being added. 
+colnames(demographics2)[5] = 'Cancer_Risk_Level'
+```
+
+This is the quick view of the demographics with stratification rules added:
+
+| patient_id | gender | age | race      | Cancer_Risk_Level |
+|------------|--------|-----|-----------|-------------------|
+| h9993d     | female | 69  | NON_WHITE | High_Risk         |
+| w9986a     | female | 46  | WHITE     | Low_Risk          |
+| n9925d     | female | 84  | NON_WHITE | High_RIsk         |
+
+
+This is the categorical table with risk level as category:
+
+| Cancer_Risk_Level | Frequency |
+|-------------------|-----------|
+| Low_Risk          | 40        |
+| High_Risk         | 33        |
+| Medium_Risk       | 24        |
+| Medium_to_Low     | 1         |
+| High_to_Medium    | 1         |
+
+
+###Conclusion:    
+Among 99 unique patients (with 2 duplicated patients deleted from table 'demographics'), 40 are of *Low_Risk*, 33 are of *High_Risk*, 24 are of *Medium_Risk*, 1 is *High_to_Medium_Risk* and 1 is *Medium_to_Low_Risk*. 
+\pagebreak
+
+\newpage
+###4. How drug prevalence has changed over time  
+**Assumption 1:**  
+Due to the small sample size, a ggplot of drug prevalence based on year has been created. This year-result may be more significant than results based on days or months.
+
+```{r, message=FALSE, warning=FALSE, echo=FALSE}
+administration2[,6] = format(administration2[, 4], "%Y")
+colnames(administration2)[6] = 'year'
+administration2[,6] = factor(administration2[,6 ])
+#table(administration2$drug_name, administration2$year)
+drug = data.frame(table(administration2$drug_name, administration2$year))
+colnames(drug) = c("drug_name", "year", "Freq")
+library(ggplot2)
+p1 = ggplot(drug, aes(x=year, y=Freq, group=drug_name, label=drug[,3]))+ geom_line(aes(color=drug_name))+geom_point(aes(color=drug_name)) + geom_text(size=3.5) + labs(title = "Drug prevalence changed over years", x="Year", y ="Total Orders")
+## Observed from the plot p1, "bevacizumab" and "erlotinib hcl"'s prevalence has been dramatically increased, while the other two are not as significantly increasing. Overall, the drug prevalence has been increased over years. 
+p1
+```
+\pagebreak
+
+\newpage
+
+**Assumption 2:**    
+As observed from plot1, there are even drugs administered in the future, namely 2017, 2018, 2019, 2020 and 2025. Since the medical researcher may only be interested in historical data, therefore I also created a ggplot using drug data during 2005-2015. 
+
+```{r, message=FALSE, warning=FALSE, echo=FALSE}
+drug2 = subset(drug, year %in% c(2005, 2009, 2010, 2011, 2012, 2013, 2014, 2015))
+p2 = ggplot(drug2, aes(x=year, y=Freq, group=drug_name, label=drug2[,3]))+ geom_line(aes(color=drug_name))+geom_point(aes(color=drug_name)) + geom_text(size=3.5) + labs(title = "Drug prevalence changed over years", x="Year", y ="Total Orders")
+p2
+```
+
